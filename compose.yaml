@@ -1,0 +1,39 @@
+services:
+  notes_reactapp:
+    container_name: notes_reactapp
+    image: reactapp:1.0.0
+    build:
+      context: ./frontend
+      dockerfile: frontend.dockerfile
+    ports:
+      - 3000:3000
+    depends_on:
+      - notes_goapp
+
+  notes_goapp:
+    container_name: notes_goapp
+    image: goapp:1.0.0
+    build:
+      context: ./backend
+      dockerfile: go.dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - notes_db
+    environment:
+      DATABASE_URL: "postgres://notes_user:notes_password@notes_db:5432/notes?sslmode=disable"
+
+  notes_db:
+    container_name: notes_db
+    image: postgres:17
+    environment:
+      POSTGRES_USER: notes_user
+      POSTGRES_PASSWORD: notes_password
+      POSTGRES_DB: notes
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata: {}
