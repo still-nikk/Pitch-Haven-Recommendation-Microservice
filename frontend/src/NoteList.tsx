@@ -25,6 +25,8 @@ type NoteListProps = {
   notes: SimplifiedNote[];
   onDeleteTag: (id: string) => Promise<void>;
   onUpdateTag: (id: string, label: string) => Promise<void>;
+  currentUser: any; // ✅ add this
+  onLogout: () => void; // ✅ add this
 };
 
 type EditTagsModalProps = {
@@ -40,6 +42,8 @@ export function NoteList({
   notes,
   onUpdateTag,
   onDeleteTag,
+  currentUser,
+  onLogout,
 }: NoteListProps) {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [title, setTitle] = useState("");
@@ -69,12 +73,20 @@ export function NoteList({
             <Link to="/new">
               <Button variant="primary">Create</Button>
             </Link>
-            <Button
-              onClick={() => setEditTagsModalIsOpen(true)}
-              variant="outline-secondary"
-            >
-              Edit Tags
-            </Button>
+
+            {currentUser && (
+              <>
+                <Button
+                  onClick={() => setEditTagsModalIsOpen(true)}
+                  variant="outline-secondary"
+                >
+                  Edit Tags
+                </Button>
+                <Button variant="danger" onClick={onLogout}>
+                  Logout
+                </Button>
+              </>
+            )}
           </Stack>
         </Col>
       </Row>

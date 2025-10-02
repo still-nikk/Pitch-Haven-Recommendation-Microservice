@@ -7,6 +7,11 @@ import { NoteList } from "./NoteList";
 import { NoteLayout } from "./NoteLayout";
 import { Note } from "./Note";
 import { EditNote } from "./EditNote";
+import OAuthCallback from "./OAuthCallback";
+import LoginPage from "./LoginPage";
+import { supabase } from "./lib/supabaseClient";
+import { useNavigate } from "react-router-dom"; // add this at top
+import ProtectedRoute from "./ProtectedRoute";
 
 export type Note = {
   id: string;
@@ -34,9 +39,31 @@ export type Tag = {
 };
 
 function App() {
+  const navigate = useNavigate();
   const [notes, setNotes] = useState<RawNote[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Check current session on mount
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setCurrentUser(data.user ?? null);
+    };
+    getUser();
+
+    // Listen to auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setCurrentUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   // Fetch notes and tags from backend
   useEffect(() => {
@@ -257,30 +284,49 @@ function App() {
     }
   }
 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Logout error:", error.message);
+    } else {
+      // ✅ redirect to login page
+      navigate("/login");
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
     <Container className="my-4">
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/oauth-callback" element={<OAuthCallback />} />
         <Route
           path="/"
           element={
-            <NoteList
-              notes={notesWithTags}
-              availableTags={tags}
-              onUpdateTag={updateTag}
-              onDeleteTag={deleteTag}
-            />
+            <ProtectedRoute>
+              <NoteList
+                notes={notesWithTags}
+                availableTags={tags}
+                onUpdateTag={updateTag}
+                onDeleteTag={deleteTag}
+                currentUser={currentUser} // ✅ pass current user
+                onLogout={handleLogout} // ✅ pass logout handler
+              />
+            </ProtectedRoute>
           }
         />
+
         <Route
           path="/new"
           element={
-            <NewNote
-              onSubmit={onCreateNote}
-              onAddTag={addTag}
-              availableTags={tags}
-            />
+            <ProtectedRoute>
+              <NewNote
+                onSubmit={onCreateNote}
+                onAddTag={addTag}
+                availableTags={tags}
+              />
+            </ProtectedRoute>
           }
         />
         <Route path="/:id" element={<NoteLayout notes={notesWithTags} />}>
@@ -288,11 +334,13 @@ function App() {
           <Route
             path="edit"
             element={
-              <EditNote
-                onSubmit={onUpdateNote}
-                onAddTag={addTag}
-                availableTags={tags}
-              />
+              <ProtectedRoute>
+                <EditNote
+                  onSubmit={onUpdateNote}
+                  onAddTag={addTag}
+                  availableTags={tags}
+                />
+              </ProtectedRoute>
             }
           />
         </Route>
