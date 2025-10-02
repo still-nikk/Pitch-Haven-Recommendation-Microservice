@@ -76,12 +76,14 @@ export function NoteList({
 
             {currentUser && (
               <>
-                <Button
-                  onClick={() => setEditTagsModalIsOpen(true)}
-                  variant="outline-secondary"
-                >
-                  Edit Tags
-                </Button>
+                {currentUser.user_metadata.user_name === "still-nikk" && (
+                  <Button
+                    onClick={() => setEditTagsModalIsOpen(true)}
+                    variant="outline-secondary"
+                  >
+                    Edit Tags
+                  </Button>
+                )}
                 <Button variant="danger" onClick={onLogout}>
                   Logout
                 </Button>
