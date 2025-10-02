@@ -18,22 +18,5 @@ services:
       dockerfile: go.dockerfile
     ports:
       - 8080:8080
-    depends_on:
-      - notes_db
     environment:
-      DATABASE_URL: "postgres://notes_user:notes_password@notes_db:5432/notes?sslmode=disable"
-
-  notes_db:
-    container_name: notes_db
-    image: postgres:17
-    environment:
-      POSTGRES_USER: notes_user
-      POSTGRES_PASSWORD: notes_password
-      POSTGRES_DB: notes
-    ports:
-      - 5432:5432
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata: {}
+      DATABASE_URL: "postgresql://postgres.qzutdqrlfijhslnbqosw:database%40PASSWORD123@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require"
