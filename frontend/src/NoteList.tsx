@@ -90,7 +90,9 @@ export function NoteList({
             <Link to="/new">
               <Button variant="primary">Create</Button>
             </Link>
-
+            <Link to="/interests">
+              <Button variant="outline-primary">Update Interests</Button>
+            </Link>
             {currentUser && (
               <>
                 {currentUser.user_metadata.user_name === "still-nikk" && (
