@@ -67,7 +67,7 @@ function App() {
       listener.subscription.unsubscribe();
     };
   }, []);
-  // console.log("Printing Current User: ", currentUser);
+  console.log("Printing Current User: ", currentUser);
 
   // Getting the currentDbUser info from our users table
   async function fetchDbUserByUUID(uuid: string) {
@@ -87,7 +87,7 @@ function App() {
       fetchDbUserByUUID(currentUser.id);
     }
   }, [currentUser]);
-  // console.log("Printing Current DB User State:", currentDbUser);
+  console.log("Printing Current DB User State:", currentDbUser);
 
   useEffect(() => {
     if (currentDbUser?.id) {
@@ -422,7 +422,28 @@ function App() {
     }
   }
 
-  if (loading || !currentDbUser) return <div>Loading user data...</div>;
+  if (loading) {
+    // Show loader while checking auth/db user
+    return <div>Loading user data...</div>;
+  }
+
+  if (!currentUser) {
+    // Not logged in, show login page
+    return <LoginPage />;
+  }
+
+  if (!currentDbUser) {
+    // User is logged in but not in DB yet, show interests selection
+    return (
+      <InterestSelection
+        currentUser={currentUser}
+        currentDbUser={currentDbUser}
+        updateUserInterests={updateUserInterests}
+      />
+    );
+  }
+
+  // if (loading || !currentDbUser) return <div>Loading user data...</div>;
 
   return (
     <Container className="my-4">

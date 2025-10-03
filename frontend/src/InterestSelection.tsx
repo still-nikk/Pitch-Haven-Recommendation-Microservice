@@ -32,6 +32,8 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
         setInterests(data.map((i) => ({ ...i, id: i.id.toString() })));
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false); // <-- move setLoading(false) here
       }
     }
 
@@ -52,9 +54,8 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
         setSelectedIds(userTags.map((t) => t.id.toString()));
       } catch (err) {
         console.error(err);
-      } finally {
-        setLoading(false);
       }
+      // Do NOT setLoading(false) here!
     }
 
     fetchUserSelectedInterests();
