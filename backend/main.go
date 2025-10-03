@@ -29,6 +29,18 @@ type Note struct {
 	Tags     []Tag  `json:"tags,omitempty"`
 }
 
+// User struct → represents a row in the users table
+type User struct {
+	ID    int    `json:"id"`
+	Email string `json:"email"`
+}
+
+// UserTag struct → represents a row in the user_tags table which corresponds to each user's preferred tags
+type UserTag struct {
+	UserID int `json:"user_id"`
+	TagID  int `json:"tag_id"`
+}
+
 // enhancedRouter wraps mux.Router with middleware
 func enhancedRouter() *mux.Router {
 	r := mux.NewRouter()
@@ -96,6 +108,16 @@ func main() {
 			PRIMARY KEY (note_id, tag_id)
 		);
 
+		CREATE TABLE IF NOT EXISTS users (
+			id SERIAL PRIMARY KEY,
+			email TEXT UNIQUE NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS user_tags (
+			user_id INT REFERENCES users(id) ON DELETE CASCADE,
+			tag_id INT REFERENCES tags(id) ON DELETE CASCADE,
+			PRIMARY KEY (user_id, tag_id)
+		);
     `)
 	if err != nil {
 		log.Fatalf("❌ Failed to create tables: %v", err)
@@ -112,12 +134,19 @@ func main() {
 	r.HandleFunc("/tags/{id}", getTag).Methods("GET")
 	r.HandleFunc("/tags/{id}", updateTag).Methods("PUT")
 	r.HandleFunc("/tags/{id}", deleteTag).Methods("DELETE")
+
 	// Routes -> Notes
 	r.HandleFunc("/notes", createNote).Methods("POST")
 	r.HandleFunc("/notes", getNotes).Methods("GET")
 	r.HandleFunc("/notes/{id}", getNote).Methods("GET")
 	r.HandleFunc("/notes/{id}", updateNote).Methods("PUT")
 	r.HandleFunc("/notes/{id}", deleteNote).Methods("DELETE")
+
+	// Routes -> User Interests
+	r.HandleFunc("/users/{id}/tags", getUserTags).Methods("GET")
+	r.HandleFunc("/users/{id}/tags", setUserTags).Methods("POST")
+	r.HandleFunc("/users/{id}/tags", replaceUserTags).Methods("PUT")
+	r.HandleFunc("/users/{id}/tags", deleteUserTags).Methods("DELETE")
 
 	// Add this to handle all OPTIONS requests for CORS preflight
 	r.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -477,4 +506,138 @@ func deleteNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent) // 204 No Content
+}
+
+// GET /users/{id}/tags → fetch a user's selected interests
+func getUserTags(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["id"]
+
+	rows, err := db.Query(`
+        SELECT t.id, t.label
+        FROM tags t
+        INNER JOIN user_tags ut ON ut.tag_id = t.id
+        WHERE ut.user_id = $1
+    `, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var tags []Tag
+	for rows.Next() {
+		var t Tag
+		if err := rows.Scan(&t.ID, &t.Label); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		tags = append(tags, t)
+	}
+
+	json.NewEncoder(w).Encode(tags)
+}
+
+// POST /users/{id}/tags → set a user's interests
+func setUserTags(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["id"]
+
+	var tags []Tag
+	if err := json.NewDecoder(r.Body).Decode(&tags); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Clear old tags
+	_, err = tx.Exec("DELETE FROM user_tags WHERE user_id=$1", userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Insert new tags
+	for _, tag := range tags {
+		_, err = tx.Exec("INSERT INTO user_tags (user_id, tag_id) VALUES ($1, $2)", userID, tag.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+}
+
+// PUT /users/{id}/tags → replace a user's interests
+func replaceUserTags(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["id"]
+
+	var tags []Tag
+	if err := json.NewDecoder(r.Body).Decode(&tags); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Clear old tags
+	_, err = tx.Exec("DELETE FROM user_tags WHERE user_id=$1", userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Insert new tags
+	for _, tag := range tags {
+		_, err = tx.Exec("INSERT INTO user_tags (user_id, tag_id) VALUES ($1, $2)", userID, tag.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"status": "replaced"})
+}
+
+// DELETE /users/{id}/tags → remove all interests for a user
+func deleteUserTags(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["id"]
+
+	res, err := db.Exec("DELETE FROM user_tags WHERE user_id=$1", userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "No tags found for this user", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
 }
