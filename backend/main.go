@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -136,6 +137,7 @@ func main() {
 	r.HandleFunc("/tags/{id}", deleteTag).Methods("DELETE")
 
 	// Routes -> Notes
+	r.HandleFunc("/notes/by-tags", getNotesByTagsHandler).Methods("GET")
 	r.HandleFunc("/notes", createNote).Methods("POST")
 	r.HandleFunc("/notes", getNotes).Methods("GET")
 	r.HandleFunc("/notes/{id}", getNote).Methods("GET")
@@ -148,9 +150,20 @@ func main() {
 	r.HandleFunc("/users/{id}/tags", replaceUserTags).Methods("PUT")
 	r.HandleFunc("/users/{id}/tags", deleteUserTags).Methods("DELETE")
 
-	// Add this to handle all OPTIONS requests for CORS preflight
-	r.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNoContent)
+	// Routes -> Users
+	r.HandleFunc("/users/{id}", getUser).Methods("GET")
+	r.HandleFunc("/users/by-supabase/{uuid}", getUserByUUID).Methods("GET")
+
+	// Handle all OPTIONS requests globally (for CORS preflight)
+	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "OPTIONS" {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		http.NotFound(w, r)
 	})
 
 	// Start server
@@ -640,4 +653,109 @@ func deleteUserTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+}
+
+// GET /users/{id} → fetch a single user
+func getUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["id"]
+
+	var u User
+	err := db.QueryRow("SELECT id, email FROM users WHERE id=$1", userID).Scan(&u.ID, &u.Email)
+	if err == sql.ErrNoRows {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(u)
+}
+
+// GET /users/by-supabase/{uuid} → fetch user by Supabase UUID
+func getUserByUUID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	uuid := vars["uuid"]
+
+	var u User
+	err := db.QueryRow("SELECT id, email FROM users WHERE supabase_id=$1", uuid).Scan(&u.ID, &u.Email)
+	if err == sql.ErrNoRows {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(u)
+}
+
+// GET /notes/by-tags?tagIds=1,2,3
+func getNotesByTagsHandler(w http.ResponseWriter, r *http.Request) {
+	tagIdsQuery := r.URL.Query().Get("tagIds")
+	if tagIdsQuery == "" {
+		http.Error(w, "tagIds parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	tagIds := strings.Split(tagIdsQuery, ",")
+	placeholders := make([]string, len(tagIds))
+	args := make([]interface{}, len(tagIds))
+	for i, id := range tagIds {
+		placeholders[i] = fmt.Sprintf("$%d", i+1) // Postgres style
+		args[i] = id
+	}
+
+	// 1️⃣ First, fetch notes matching tags
+	query := fmt.Sprintf(`
+        SELECT DISTINCT n.id, n.title, n.markdown
+        FROM notes n
+        JOIN note_tags nt ON n.id = nt.note_id
+        WHERE nt.tag_id IN (%s)
+    `, strings.Join(placeholders, ","))
+
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var notes []Note
+	for rows.Next() {
+		var n Note
+		if err := rows.Scan(&n.ID, &n.Title, &n.Markdown); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// 2️⃣ Fetch tags for each note
+		tagRows, err := db.Query(`
+            SELECT t.id, t.label
+            FROM tags t
+            INNER JOIN note_tags nt ON nt.tag_id = t.id
+            WHERE nt.note_id = $1
+        `, n.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		for tagRows.Next() {
+			var t Tag
+			if err := tagRows.Scan(&t.ID, &t.Label); err != nil {
+				tagRows.Close()
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			n.Tags = append(n.Tags, t)
+		}
+		tagRows.Close()
+
+		notes = append(notes, n)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(notes)
 }

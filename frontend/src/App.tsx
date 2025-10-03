@@ -12,6 +12,7 @@ import LoginPage from "./LoginPage";
 import { supabase } from "./lib/supabaseClient";
 import { useNavigate } from "react-router-dom"; // add this at top
 import ProtectedRoute from "./ProtectedRoute";
+import InterestSelection from "./InterestSelection";
 
 export type Note = {
   id: string;
@@ -44,6 +45,8 @@ function App() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentDbUser, setCurrentDbUser] = useState<any>(null);
+  const [userTagIds, setUserTagIds] = useState<string[]>([]);
 
   useEffect(() => {
     // Check current session on mount
@@ -64,46 +67,135 @@ function App() {
       listener.subscription.unsubscribe();
     };
   }, []);
+  // console.log("Printing Current User: ", currentUser);
+
+  // Getting the currentDbUser info from our users table
+  async function fetchDbUserByUUID(uuid: string) {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/users/by-supabase/${uuid}`
+      );
+      if (!res.ok) throw new Error("Failed to fetch DB user");
+      const data = await res.json();
+      setCurrentDbUser(data);
+    } catch (err) {
+      console.error("Error fetching DB user:", err);
+    }
+  }
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetchDbUserByUUID(currentUser.id);
+    }
+  }, [currentUser]);
+  // console.log("Printing Current DB User State:", currentDbUser);
+
+  useEffect(() => {
+    if (currentDbUser?.id) {
+      fetch(`http://localhost:8080/users/${currentDbUser.id}/tags`)
+        .then((res) => res.json())
+        .then((data) => {
+          setUserTagIds(data.map((t: any) => t.id.toString()));
+        });
+    }
+  }, [currentDbUser]);
 
   // Fetch notes and tags from backend
+  // useEffect(() => {
+  //   async function fetchNotesAndTags() {
+  //     try {
+  //       const [notesRes, tagsRes] = await Promise.all([
+  //         fetch("http://localhost:8080/notes"),
+  //         fetch("http://localhost:8080/tags"),
+  //       ]);
+
+  //       const notesData: {
+  //         id: number;
+  //         title: string;
+  //         markdown: string;
+  //         tags: { id: number; label: string }[];
+  //       }[] = await notesRes.json();
+
+  //       const tagsData: { id: number; label: string }[] = await tagsRes.json();
+
+  //       const rawNotes: RawNote[] = notesData.map((note) => ({
+  //         id: note.id.toString(),
+  //         title: note.title,
+  //         markdown: note.markdown,
+  //         tagIds: (note.tags ?? []).map((tag) => tag.id.toString()),
+  //       }));
+
+  //       setNotes(rawNotes);
+
+  //       const formattedTags: Tag[] = (tagsData ?? []).map((tag) => ({
+  //         id: tag.id.toString(),
+  //         label: tag.label,
+  //       }));
+
+  //       setTags(formattedTags);
+
+  //       setLoading(false);
+  //     } catch (err) {
+  //       console.error("Failed to fetch notes or tags:", err);
+  //       setLoading(false);
+  //     }
+  //   }
+  //   fetchNotesAndTags();
+  // }, []);
+
   useEffect(() => {
-    async function fetchNotesAndTags() {
+    async function fetchFilteredNotes() {
+      if (!currentDbUser || userTagIds.length === 0) {
+        setNotes([]);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const [notesRes, tagsRes] = await Promise.all([
-          fetch("http://localhost:8080/notes"),
-          fetch("http://localhost:8080/tags"),
-        ]);
+        const queryParam = userTagIds.join(",");
+        const res = await fetch(
+          `http://localhost:8080/notes/by-tags?tagIds=${queryParam}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch filtered notes");
 
-        const notesData: {
-          id: number;
-          title: string;
-          markdown: string;
-          tags: { id: number; label: string }[];
-        }[] = await notesRes.json();
+        const notesData = await res.json();
+        console.log("Fetched notesData:", notesData); // <-- ADD THIS
 
-        const tagsData: { id: number; label: string }[] = await tagsRes.json();
-
-        const rawNotes: RawNote[] = notesData.map((note) => ({
+        const rawNotes: RawNote[] = notesData.map((note: any) => ({
           id: note.id.toString(),
           title: note.title,
           markdown: note.markdown,
-          tagIds: note.tags.map((tag) => tag.id.toString()),
+          tagIds: (note.tags ?? []).map((tag: any) => tag.id.toString()),
         }));
+
         setNotes(rawNotes);
-
-        const formattedTags: Tag[] = tagsData.map((tag) => ({
-          id: tag.id.toString(),
-          label: tag.label,
-        }));
-        setTags(formattedTags);
-
         setLoading(false);
       } catch (err) {
-        console.error("Failed to fetch notes or tags:", err);
+        console.error("Failed to fetch filtered notes:", err);
+        setNotes([]);
         setLoading(false);
       }
     }
-    fetchNotesAndTags();
+
+    fetchFilteredNotes();
+  }, [currentDbUser, userTagIds]);
+
+  useEffect(() => {
+    async function fetchTags() {
+      try {
+        const res = await fetch("http://localhost:8080/tags");
+        if (!res.ok) throw new Error("Failed to fetch tags");
+        const tagsData: { id: number; label: string }[] = await res.json();
+        setTags(
+          tagsData.map((tag) => ({
+            id: tag.id.toString(),
+            label: tag.label,
+          }))
+        );
+      } catch (err) {
+        console.error("Failed to fetch tags:", err);
+      }
+    }
+    fetchTags();
   }, []);
 
   const notesWithTags = useMemo(() => {
@@ -294,7 +386,43 @@ function App() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  async function updateUserInterests(selectedIds: string[]) {
+    if (!currentDbUser) {
+      console.error("DB user not loaded yet");
+      return;
+    }
+
+    try {
+      const payload = selectedIds.map((id) => ({ id: Number(id) }));
+      const res = await fetch(
+        `http://localhost:8080/users/${currentDbUser.id}/tags`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update interests");
+
+      // Immediately re-fetch user tags and update state
+      const tagsRes = await fetch(
+        `http://localhost:8080/users/${currentDbUser.id}/tags`
+      );
+      if (tagsRes.ok) {
+        const data = await tagsRes.json();
+        setUserTagIds(data.map((t: any) => t.id.toString()));
+      }
+
+      const result = await res.json();
+      console.log("User interests updated:", result);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save interests. Check console for details.");
+    }
+  }
+
+  if (loading || !currentDbUser) return <div>Loading user data...</div>;
 
   return (
     <Container className="my-4">
@@ -310,8 +438,10 @@ function App() {
                 availableTags={tags}
                 onUpdateTag={updateTag}
                 onDeleteTag={deleteTag}
-                currentUser={currentUser} // ✅ pass current user
-                onLogout={handleLogout} // ✅ pass logout handler
+                currentUser={currentUser}
+                onLogout={handleLogout}
+                userTagIds={userTagIds}
+                loading={loading}
               />
             </ProtectedRoute>
           }
@@ -345,6 +475,16 @@ function App() {
           />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
+        <Route
+          path="/interests"
+          element={
+            <InterestSelection
+              currentUser={currentUser}
+              currentDbUser={currentDbUser}
+              updateUserInterests={updateUserInterests}
+            />
+          }
+        />
       </Routes>
     </Container>
   );

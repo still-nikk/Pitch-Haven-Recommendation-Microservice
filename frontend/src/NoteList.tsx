@@ -25,8 +25,10 @@ type NoteListProps = {
   notes: SimplifiedNote[];
   onDeleteTag: (id: string) => Promise<void>;
   onUpdateTag: (id: string, label: string) => Promise<void>;
-  currentUser: any; // ✅ add this
-  onLogout: () => void; // ✅ add this
+  currentUser: any;
+  onLogout: () => void;
+  userTagIds: string[]; // ✅ new prop
+  loading: boolean;
 };
 
 type EditTagsModalProps = {
@@ -44,23 +46,38 @@ export function NoteList({
   onDeleteTag,
   currentUser,
   onLogout,
+  userTagIds,
+  loading = false,
 }: NoteListProps) {
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center my-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <span className="ms-2">Loading recommended projects...</span>
+      </div>
+    );
+  }
+
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [title, setTitle] = useState("");
   const [editTagsModalIsOpen, setEditTagsModalIsOpen] = useState(false);
 
+  console.log("Printing UserTagIds: ", userTagIds);
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
-      return (
-        (title === "" ||
-          note.title.toLowerCase().includes(title.toLowerCase())) &&
-        (selectedTags.length === 0 ||
-          selectedTags.every((tag) =>
-            note.tags.some((noteTag) => noteTag.id === tag.id)
-          ))
-      );
+      const matchesTitle =
+        title === "" || note.title.toLowerCase().includes(title.toLowerCase());
+
+      // If user has no tags selected, ignore tag filtering
+      const matchesUserTags =
+        userTagIds.length === 0 ||
+        note.tags.some((tag) => userTagIds.includes(tag.id));
+
+      return matchesTitle && matchesUserTags;
     });
-  }, [title, selectedTags, notes]);
+  }, [title, notes, userTagIds]);
 
   return (
     <>
