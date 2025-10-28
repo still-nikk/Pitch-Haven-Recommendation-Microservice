@@ -27,6 +27,7 @@ type Note struct {
 	ID       int    `json:"id"`
 	Title    string `json:"title"`
 	Markdown string `json:"markdown"`
+	UserID   int    `json:"user_id"`
 	Tags     []Tag  `json:"tags,omitempty"`
 }
 
@@ -325,12 +326,19 @@ func createNote(w http.ResponseWriter, r *http.Request) {
 
 	// Insert into notes table
 	err := db.QueryRow(
-		`INSERT INTO notes (title, markdown) 
-         VALUES ($1, $2) 
+		`INSERT INTO notes (title, markdown, user_id) 
+         VALUES ($1, $2, $3) 
          RETURNING id`,
-		n.Title, n.Markdown,
+		n.Title, n.Markdown, n.UserID,
 	).Scan(&n.ID)
 
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Insert into user_notes table
+	_, err = db.Exec("INSERT INTO user_notes (user_id, note_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", n.UserID, n.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -341,12 +349,14 @@ func createNote(w http.ResponseWriter, r *http.Request) {
 	for _, tag := range n.Tags {
 		tagID, err := getOrCreateTagID(tag)
 		if err != nil {
+			log.Printf("getOrCreateTagID error: %+v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		_, err = db.Exec("INSERT INTO note_tags (note_id, tag_id) VALUES ($1, $2)", n.ID, tagID)
 		if err != nil {
+			log.Printf("note_tags insert error: %+v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

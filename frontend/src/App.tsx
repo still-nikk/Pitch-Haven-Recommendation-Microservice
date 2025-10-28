@@ -14,6 +14,7 @@ import { supabase } from "./lib/supabaseClient";
 import { useNavigate } from "react-router-dom"; // add this at top
 import ProtectedRoute from "./ProtectedRoute";
 import InterestSelection from "./InterestSelection";
+import Loader from "./components/Loader";
 
 export type Note = {
   id: string;
@@ -218,6 +219,7 @@ function App() {
             id: Number(tag.id),
             label: tag.label,
           })),
+          user_id: currentDbUser.id,
         }),
       });
 
@@ -425,7 +427,7 @@ function App() {
 
   if (loading) {
     // Show loader while checking auth/db user
-    return <div>Loading user data...</div>;
+    return <Loader />;
   }
 
   if (!currentUser) {

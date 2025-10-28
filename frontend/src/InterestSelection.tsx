@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
+import { Container, Button, Spinner } from "react-bootstrap";
+import "./styles/InterestSelectionStyles.css"; // <-- Import the new CSS
 
 type InterestSelectionProps = {
   currentUser: any;
-  currentDbUser: any; // add this
+  currentDbUser: any;
   updateUserInterests: (selectedIds: string[]) => Promise<void>;
 };
 
@@ -14,7 +15,7 @@ type Interest = {
 
 const InterestSelection: React.FC<InterestSelectionProps> = ({
   currentUser,
-  currentDbUser, // new prop
+  currentDbUser,
   updateUserInterests,
 }) => {
   const [interests, setInterests] = useState<Interest[]>([]);
@@ -33,17 +34,16 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false); // <-- move setLoading(false) here
+        setLoading(false);
       }
     }
-
     fetchInterests();
   }, []);
 
   // Fetch the user's already-selected interests
   useEffect(() => {
     async function fetchUserSelectedInterests() {
-      if (!currentDbUser) return; // wait until DB user is loaded
+      if (!currentDbUser) return;
 
       try {
         const res = await fetch(
@@ -55,9 +55,7 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
       } catch (err) {
         console.error(err);
       }
-      // Do NOT setLoading(false) here!
     }
-
     fetchUserSelectedInterests();
   }, [currentDbUser]);
 
@@ -72,9 +70,7 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
       alert("User not logged in");
       return;
     }
-
     if (selectedIds.length < 3) return;
-
     setSaving(true);
     try {
       await updateUserInterests(selectedIds);
@@ -98,27 +94,29 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
         your experience.
       </p>
       {selectedIds.length < 3 && (
-        <p className="text-muted mt-2">
+        <p className="text-danger text-center mt-2">
           Please select at least 3 interests to continue.
         </p>
       )}
-      <Row className="justify-content-center">
+
+      {/* --- MODIFIED SECTION --- */}
+      <div className="interest-grid">
         {interests.map((interest) => (
-          <Col xs={6} md={4} lg={3} className="mb-3" key={interest.id}>
-            <Button
-              variant={
-                selectedIds.includes(interest.id)
-                  ? "primary"
-                  : "outline-primary"
-              }
-              className="w-100"
-              onClick={() => toggleSelection(interest.id)}
-            >
-              {interest.label}
-            </Button>
-          </Col>
+          <div className="checklist-item" key={interest.id}>
+            <input
+              value={interest.id}
+              name="interest-group"
+              type="checkbox"
+              id={`check-${interest.id}`}
+              checked={selectedIds.includes(interest.id)}
+              onChange={() => toggleSelection(interest.id)}
+            />
+            <label htmlFor={`check-${interest.id}`}>{interest.label}</label>
+          </div>
         ))}
-      </Row>
+      </div>
+      {/* --- END MODIFIED SECTION --- */}
+
       <div className="text-center mt-4">
         <Button
           variant="dark"
