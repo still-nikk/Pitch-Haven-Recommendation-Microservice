@@ -10,9 +10,9 @@ import {
   Stack,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import ReactSelect from "react-select";
+import ReactSelect, { StylesConfig } from "react-select";
 import { Tag } from "./App";
-import styles from "./NoteList.module.css";
+import "./styles/NoteListStyles.css";
 
 type SimplifiedNote = {
   tags: Tag[];
@@ -37,6 +37,53 @@ type EditTagsModalProps = {
   handleClose: () => void;
   onDeleteTag: (id: string) => Promise<void>;
   onUpdateTag: (id: string, label: string) => Promise<void>;
+};
+
+const customSelectStyles: StylesConfig = {
+  // Styles the main input box
+  control: (baseStyles, state) => ({
+    ...baseStyles,
+    backgroundColor: "#eee",
+    border: "none",
+    borderRadius: "8px",
+    boxShadow: "none", // Removes the blue glow on focus
+    "&:hover": {
+      border: "none", // Ensures no border on hover
+    },
+  }),
+
+  // Styles the text you type
+  input: (baseStyles) => ({
+    ...baseStyles,
+    color: "black",
+  }),
+
+  // Styles the placeholder text
+  placeholder: (baseStyles) => ({
+    ...baseStyles,
+    color: "#555", // A darker grey for placeholder
+  }),
+
+  // Styles the selected tags
+  multiValue: (baseStyles) => ({
+    ...baseStyles,
+    backgroundColor: "#d1d1d1",
+    borderRadius: "4px",
+  }),
+
+  // Styles the text *inside* selected tags
+  multiValueLabel: (baseStyles) => ({
+    ...baseStyles,
+    color: "black",
+  }),
+
+  // --- THIS SOLVES YOUR DROPDOWN PROBLEM ---
+  // Styles the options in the dropdown menu
+  option: (baseStyles, state) => ({
+    ...baseStyles,
+    color: "black", // Sets the text color to black
+    backgroundColor: state.isFocused ? "#f0f0f0" : "white", // Adds a light grey hover
+  }),
 };
 
 export function NoteList({
@@ -117,6 +164,8 @@ export function NoteList({
             <Form.Group controlId="title">
               <Form.Label>Title</Form.Label>
               <Form.Control
+                className="formInput"
+                placeholder="Enter Title to Search"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -127,6 +176,7 @@ export function NoteList({
             <Form.Group controlId="tags">
               <Form.Label>Tags</Form.Label>
               <ReactSelect
+                styles={customSelectStyles}
                 value={selectedTags.map((tag) => ({
                   label: tag.label,
                   value: tag.id,
@@ -137,7 +187,10 @@ export function NoteList({
                 }))}
                 onChange={(tags) => {
                   setSelectedTags(
-                    tags.map((tag) => ({ label: tag.label, id: tag.value }))
+                    tags.map((tag: any) => ({
+                      label: tag.label,
+                      id: tag.value,
+                    }))
                   );
                 }}
                 isMulti
@@ -146,13 +199,13 @@ export function NoteList({
           </Col>
         </Row>
       </Form>
-      <Row xs={1} sm={2} lg={3} xl={4} className="g-3">
+      <div className="masonryContainer">
         {filteredNotes.map((note) => (
-          <Col key={note.id}>
+          <div key={note.id} className="masonryItem">
             <NoteCard id={note.id} title={note.title} tags={note.tags} />
-          </Col>
+          </div>
         ))}
-      </Row>
+      </div>
       <EditTagsModal
         onUpdateTag={onUpdateTag}
         onDeleteTag={onDeleteTag}
@@ -166,33 +219,33 @@ export function NoteList({
 
 function NoteCard({ id, title, tags }: SimplifiedNote) {
   return (
-    <Card
-      as={Link}
-      to={`/${id}`}
-      className={`h-100 text-reset text-decoration-none ${styles.card}`}
-    >
-      <Card.Body>
-        <Stack
-          gap={2}
-          className="align-items-center justify-content-center h-100"
-        >
-          <span className="fs-5">{title}</span>
-          {tags.length > 0 && (
-            <Stack
-              gap={1}
-              direction="horizontal"
-              className="justify-content-center flex-wrap"
-            >
-              {tags.map((tag) => (
-                <Badge className="text-truncate" key={tag.id}>
-                  {tag.label}
-                </Badge>
-              ))}
-            </Stack>
-          )}
-        </Stack>
-      </Card.Body>
-    </Card>
+    <>
+      <div className="uicard">
+        <header className="uicard-header">
+          <span className="uititle">{title}</span>
+        </header>
+        <div className="uicard-author">
+          <a className="uiauthor-avatar" href="#">
+            <span></span>
+          </a>
+          <svg className="uihalf-circle" viewBox="0 0 106 57">
+            <path d="M102 4c0 27.1-21.9 49-49 49S4 31.1 4 4"></path>
+          </svg>
+          <div className="uiauthor-name">
+            <div className="uiauthor-name-prefix">Author</div> Folarin Lawal
+          </div>
+        </div>
+        {tags.length > 0 && (
+          <div className="uitags">
+            {tags.map((tag) => (
+              <a className="text-truncate" key={tag.id}>
+                {tag.label}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
