@@ -1,0 +1,105 @@
+/* Define the primary color from your tailwind config for use */
+:root {
+  --primary-color: #7f35ff;
+}
+
+.app-navbar {
+  /* Modern semi-transparent "glassmorphism" effect */
+  background-color: rgba(20, 20, 20, 0.75) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.navbar-brand-custom {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white !important;
+  font-family: sans-serif;
+}
+
+.navbar-brand-custom .text-primary {
+  background: -webkit-linear-gradient(#e52e71, #ff8a00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Style the text links */
+.navbar-link-text {
+  color: #d1d1d1 !important;
+  font-weight: 500;
+  margin: 0 0.5rem;
+  transition: color 0.2s ease;
+  font-family: sans-serif;
+}
+
+.navbar-link-text:hover,
+.navbar-link-text.active {
+  color: white !important;
+}
+
+/* Style the login button */
+.navbar-login-btn {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 0.5rem 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.navbar-login-btn:hover {
+  background-color: #6a2cdb !important;
+  border-color: #6a2cdb !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(127, 53, 255, 0.3);
+}
+
+/* Style the user avatar */
+.navbar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+  object-fit: cover;
+}
+
+/* Remove the default dropdown arrow */
+.navbar-dropdown-menu .dropdown-toggle::after {
+  display: none;
+}
+
+/* Style the dropdown menu */
+.navbar-dropdown-menu .dropdown-menu {
+  background-color: #1c1c1c;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  margin-top: 10px !important; /* Add space from avatar */
+}
+
+.navbar-dropdown-menu .dropdown-item {
+  color: #d1d1d1;
+  font-weight: 500;
+}
+
+.navbar-dropdown-menu .dropdown-item:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.navbar-dropdown-menu .dropdown-header {
+  color: #888;
+}
+
+/* Style the mobile toggle button */
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255, 255, 255, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important;
+}

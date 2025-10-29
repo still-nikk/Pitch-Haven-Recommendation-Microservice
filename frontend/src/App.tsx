@@ -14,9 +14,11 @@ import { supabase } from "./lib/supabaseClient";
 import { useNavigate } from "react-router-dom"; // add this at top
 import ProtectedRoute from "./ProtectedRoute";
 import InterestSelection from "./InterestSelection";
+import { AppNavbar } from "./components/AppNavbar";
 
 export type Note = {
   id: string;
+  username: string;
 } & NoteData;
 
 export type RawNote = {
@@ -431,85 +433,106 @@ function App() {
 
   if (!currentUser) {
     // Not logged in, show login page
-    return <LoginPage />;
+    return (
+      <>
+        {/* Pass null as user and the logout function */}
+        <AppNavbar currentUser={null} onLogout={handleLogout} />
+        <LoginPage />
+      </>
+    );
   }
 
   if (!currentDbUser) {
     // User is logged in but not in DB yet, show interests selection
     return (
-      <InterestSelection
-        currentUser={currentUser}
-        currentDbUser={currentDbUser}
-        updateUserInterests={updateUserInterests}
-      />
+      <>
+        {/* Pass the logged-in user and logout function */}
+        <AppNavbar currentUser={currentUser} onLogout={handleLogout} />
+        {/* Wrap the page content in a Container for consistent margins */}
+        <Container className="my-4">
+          <InterestSelection
+            currentUser={currentUser}
+            currentDbUser={currentDbUser}
+            updateUserInterests={updateUserInterests}
+          />
+        </Container>
+      </>
     );
   }
 
   // if (loading || !currentDbUser) return <div>Loading user data...</div>;
 
   return (
-    <Container className="my-4">
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/oauth-callback" element={<OAuthCallback />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <NoteList
-                notes={notesWithTags}
-                availableTags={tags}
-                onUpdateTag={updateTag}
-                onDeleteTag={deleteTag}
-                currentUser={currentUser}
-                onLogout={handleLogout}
-                userTagIds={userTagIds}
-                loading={loading}
-              />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/new"
-          element={
-            <ProtectedRoute>
-              <NewNote
-                onSubmit={onCreateNote}
-                onAddTag={addTag}
-                availableTags={tags}
-              />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/:id" element={<NoteLayout notes={notesWithTags} />}>
-          <Route index element={<Note onDelete={onDeleteNote} />} />
+    <>
+      <AppNavbar currentUser={currentUser} onLogout={handleLogout} />
+      <Container className="my-4">
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/oauth-callback" element={<OAuthCallback />} />
           <Route
-            path="edit"
+            path="/"
             element={
               <ProtectedRoute>
-                <EditNote
-                  onSubmit={onUpdateNote}
+                <NoteList
+                  notes={notesWithTags}
+                  availableTags={tags}
+                  onUpdateTag={updateTag}
+                  onDeleteTag={deleteTag}
+                  currentUser={currentUser}
+                  onLogout={handleLogout}
+                  userTagIds={userTagIds}
+                  loading={loading}
+                />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/new"
+            element={
+              <ProtectedRoute>
+                <NewNote
+                  onSubmit={onCreateNote}
                   onAddTag={addTag}
                   availableTags={tags}
                 />
               </ProtectedRoute>
             }
           />
-        </Route>
-        <Route path="*" element={<Navigate to="/" />} />
-        <Route
-          path="/interests"
-          element={
-            <InterestSelection
-              currentUser={currentUser}
-              currentDbUser={currentDbUser}
-              updateUserInterests={updateUserInterests}
+          <Route path="/:id" element={<NoteLayout notes={notesWithTags} />}>
+            <Route
+              index
+              element={
+                <Note onDelete={onDeleteNote} currentUser={currentUser} />
+              }
             />
-          }
-        />
-      </Routes>
-    </Container>
+            <Route
+              path="edit"
+              element={
+                <ProtectedRoute>
+                  <EditNote
+                    onSubmit={onUpdateNote}
+                    onAddTag={addTag}
+                    availableTags={tags}
+                  />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+          <Route path="*" element={<Navigate to="/" />} />
+          <Route
+            path="/interests"
+            element={
+              <InterestSelection
+                currentUser={currentUser}
+                currentDbUser={currentDbUser}
+                updateUserInterests={updateUserInterests}
+              />
+            }
+          />
+        </Routes>
+      </Container>
+    </>
   );
 }
 
