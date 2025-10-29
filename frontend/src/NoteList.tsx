@@ -18,6 +18,7 @@ type SimplifiedNote = {
   tags: Tag[];
   title: string;
   id: string;
+  username: string;
 };
 
 type NoteListProps = {
@@ -202,7 +203,14 @@ export function NoteList({
       <div className="masonryContainer">
         {filteredNotes.map((note) => (
           <div key={note.id} className="masonryItem">
-            <NoteCard id={note.id} title={note.title} tags={note.tags} />
+            <Link to={`/${note.id}`} className="note-card-link">
+              <NoteCard
+                id={note.id}
+                username={note.username}
+                title={note.title}
+                tags={note.tags}
+              />
+            </Link>
           </div>
         ))}
       </div>
@@ -217,33 +225,45 @@ export function NoteList({
   );
 }
 
-function NoteCard({ id, title, tags }: SimplifiedNote) {
+function NoteCard({ id, username, title, tags }: SimplifiedNote) {
   return (
     <>
-      <div className="uicard">
-        <header className="uicard-header">
-          <span className="uititle">{title}</span>
-        </header>
-        <div className="uicard-author">
-          <a className="uiauthor-avatar" href="#">
-            <span></span>
-          </a>
-          <svg className="uihalf-circle" viewBox="0 0 106 57">
-            <path d="M102 4c0 27.1-21.9 49-49 49S4 31.1 4 4"></path>
-          </svg>
-          <div className="uiauthor-name">
-            <div className="uiauthor-name-prefix">Author</div> Folarin Lawal
+      {/* 1. This outer div is just for the gradient border */}
+      <div className="module-border-wrap">
+        {/* 2. The inner div is your original .uicard, now without a border */}
+        <div className="uicard">
+          <header className="uicard-header">
+            <span className="uititle">{title}</span>
+          </header>
+          <div className="uicard-author">
+            <a className="uiauthor-avatar" href="#">
+              <span>
+                <img
+                  src="https://cdn-icons-png.flaticon.com/512/6840/6840478.png"
+                  alt=""
+                />
+              </span>
+            </a>
+            <svg className="uihalf-circle" viewBox="0 0 106 57">
+              <path d="M102 4c0 27.1-21.9 49-49 49S4 31.1 4 4"></path>
+            </svg>
+            <div className="uiauthor-name">
+              <div className="uiauthor-name-prefix">Developer</div>{" "}
+              {username !== "PitchHaven Admin"
+                ? username
+                : "Recom. by PitchHaven"}
+            </div>
           </div>
+          {tags.length > 0 && (
+            <div className="uitags">
+              {tags.map((tag) => (
+                <a className="text-truncate" key={tag.id}>
+                  {tag.label}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
-        {tags.length > 0 && (
-          <div className="uitags">
-            {tags.map((tag) => (
-              <a className="text-truncate" key={tag.id}>
-                {tag.label}
-              </a>
-            ))}
-          </div>
-        )}
       </div>
     </>
   );

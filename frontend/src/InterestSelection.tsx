@@ -119,7 +119,7 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
 
       <div className="text-center mt-4">
         <Button
-          variant="dark"
+          variant="primary"
           onClick={handleSave}
           disabled={selectedIds.length < 3 || saving}
         >

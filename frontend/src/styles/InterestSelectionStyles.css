@@ -3,7 +3,7 @@
   display: grid;
   gap: 1.5rem; /* Spacing between items */
   padding: 1rem;
-  max-width: 900px; /* Optional: constrain the max width */
+  max-width: 1200px; /* Optional: constrain the max width */
   margin: 0 auto; /* Optional: center the grid */
 
   /* 1 column by default (small) */
@@ -13,14 +13,14 @@
 /* 2 columns for medium devices (md) */
 @media (min-width: 768px) {
   .interest-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 /* 3 columns for extra-large devices (xl) */
 @media (min-width: 1200px) {
   .interest-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -44,18 +44,27 @@
   display: grid;
   grid-template-columns: 30px auto;
   align-items: center;
+  transition: scale 0.3s ease;
+  cursor: pointer;
+}
+
+.checklist-item:hover {
+  scale: 1.1;
 }
 
 .checklist-item label {
   color: var(--text);
   position: relative;
-  cursor: pointer;
   display: grid;
+  cursor: pointer;
   align-items: center;
   width: fit-content;
   transition: color 0.3s ease;
   margin-right: 20px;
-}
+  -webkit-user-select: none; /* Safari, Chrome */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE/Edge */
+  user-select: none;}
 
 .checklist-item label::before,
 .checklist-item label::after {

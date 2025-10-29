@@ -1,0 +1,108 @@
+/* --- Original Uiverse CSS --- */
+.form-container {
+  width: 100%; /* Changed from 400px to be responsive */
+  max-width: 100vw; /* Added max-width */
+  margin: 0 auto; /* Center the form */
+  background: linear-gradient(#212121, #212121) padding-box,
+    linear-gradient(145deg, transparent 35%, #e81cff, #40c9ff) border-box;
+  border: 2px solid transparent;
+  padding: 32px 24px;
+  font-size: 14px;
+  font-family: inherit;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+  border-radius: 16px;
+}
+
+.form-container .form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-container .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.form-container .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #717171;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* This will style react-bootstrap's Form.Control */
+.form-container .form-group input,
+.form-container .form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  background-color: transparent;
+  border: 1px solid #414141;
+  box-sizing: border-box; /* Added for consistency */
+}
+
+.form-container .form-group textarea {
+  resize: none;
+  height: auto; /* Let the 'rows' prop control height */
+}
+
+.form-container .form-group input::placeholder {
+  opacity: 0.5;
+}
+
+.form-container .form-group input:focus,
+.form-container .form-group textarea:focus {
+  outline: none;
+  border-color: #e81cff;
+}
+
+/* --- NEW Button Classes (replaces .form-submit-btn) --- */
+
+/* Base style for both buttons */
+.uiverse-btn-primary,
+.uiverse-btn-secondary {
+  font-family: inherit;
+  font-weight: 600;
+  padding: 12px 16px;
+  font-size: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: 150ms ease-in-out;
+  border: 1px solid #414141;
+}
+
+.uiverse-btn-primary:active,
+.uiverse-btn-secondary:active {
+  scale: 0.95;
+}
+
+/* "Save" Button Style */
+.uiverse-btn-primary {
+  color: #717171;
+  background: #313131;
+}
+
+.uiverse-btn-primary:hover {
+  background-color: #fff;
+  border-color: #fff;
+  color: #212121; /* Added for hover contrast */
+}
+
+/* "Cancel" Button Style */
+.uiverse-btn-secondary {
+  color: #717171;
+  background: transparent;
+}
+
+.uiverse-btn-secondary:hover {
+  background-color: #313131;
+}

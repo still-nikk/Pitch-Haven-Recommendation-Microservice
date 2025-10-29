@@ -28,6 +28,7 @@ type Note struct {
 	Title    string `json:"title"`
 	Markdown string `json:"markdown"`
 	UserID   int    `json:"user_id"`
+	UserName string `json:"username"`
 	Tags     []Tag  `json:"tags,omitempty"`
 }
 
@@ -370,7 +371,11 @@ func createNote(w http.ResponseWriter, r *http.Request) {
 
 // Handler → Fetch all notes
 func getNotes(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT * FROM notes")
+	rows, err := db.Query(`
+		SELECT n.id, n.title, n.markdown, n.user_id, u.name
+		FROM notes n
+		JOIN users u ON n.user_id = u.id
+		`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -380,7 +385,7 @@ func getNotes(w http.ResponseWriter, r *http.Request) {
 	var notes []Note
 	for rows.Next() {
 		var n Note
-		if err := rows.Scan(&n.ID, &n.Title, &n.Markdown); err != nil {
+		if err := rows.Scan(&n.ID, &n.Title, &n.Markdown, &n.UserID, &n.UserName); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -719,11 +724,12 @@ func getNotesByTagsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1️⃣ First, fetch notes matching tags
 	query := fmt.Sprintf(`
-        SELECT DISTINCT n.id, n.title, n.markdown
-        FROM notes n
-        JOIN note_tags nt ON n.id = nt.note_id
-        WHERE nt.tag_id IN (%s)
-    `, strings.Join(placeholders, ","))
+		SELECT DISTINCT n.id, n.title, n.markdown, n.user_id, u.name
+		FROM notes n
+		JOIN note_tags nt ON n.id = nt.note_id
+		JOIN users u ON n.user_id = u.id
+		WHERE nt.tag_id IN (%s)
+	`, strings.Join(placeholders, ","))
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
@@ -735,7 +741,7 @@ func getNotesByTagsHandler(w http.ResponseWriter, r *http.Request) {
 	var notes []Note
 	for rows.Next() {
 		var n Note
-		if err := rows.Scan(&n.ID, &n.Title, &n.Markdown); err != nil {
+		if err := rows.Scan(&n.ID, &n.Title, &n.Markdown, &n.UserID, &n.UserName); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -19,13 +19,11 @@ body {
   color: black;
 }
 
-/* --- ADD THIS --- */
-/* This handles the "active" state for the "Title" input */
 .formInput:focus {
-  background-color: #eee; /* Keep the background */
+  background-color: #eee;
   color: black !important;
-  border-color: #eee; /* Remove border color change */
-  box-shadow: none; /* Remove Bootstrap's default focus glow */
+  border-color: #eee;
+  box-shadow: none;
 }
 
 .custom-select {
@@ -36,23 +34,18 @@ body {
   display: flex;
   position: relative;
   flex-direction: column;
-  /* min-height: 350px; */
   height: auto;
-  /* width: 190px;
-  min-width: 250px; */
   width: 100%;
   padding: 1rem;
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.35);
+  border-radius: 17px;
+  background: rgba(0, 0, 0, 1);
   backdrop-filter: blur(35px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 80px rgba(0, 0, 0, 0.2);
-  transition: 0.2s;
   font-family: "Inter", sans-serif;
 }
 
 .uicard:hover {
-  transform: translateY(-0.4rem);
+  transform: none;
 }
 
 .uicard-author {
@@ -73,12 +66,19 @@ body {
 }
 
 .uiauthor-avatar span {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #f2f2f2;
+  background: #b7b6b6;
   margin: 16px 10px;
+  overflow: hidden;
+}
+
+.uiauthor-avatar img {
+  scale: 0.07
 }
 
 .uihalf-circle {
@@ -109,15 +109,12 @@ body {
   margin: 0.25rem 0 auto;
   cursor: pointer;
   font-family: "Arial Black", sans-serif;
+  /* --- ADD THIS --- */
+  transition: color 0.2s ease;
 }
 
-.uicard-header .uititle:hover {
-  background: linear-gradient(90deg, #ff8a00, #e52e71);
-  text-shadow: none;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+/* --- REMOVED THIS RULE --- */
+/* .uicard-header .uititle:hover { ... } */
 
 .uitags {
   display: flex;
@@ -140,26 +137,17 @@ body {
   padding: 0.2rem 0.85rem 0.25rem;
   position: relative;
   text-decoration: none;
+  /* --- ADD THIS --- */
+  transition: border-color 0.2s ease, color 0.2s ease;
 }
 
-.uitags a:hover {
-  background: linear-gradient(90deg, #ff8a00, #e52e71);
-  text-shadow: none;
-  -webkit-text-fill-color: transparent;
-  -webkit-background-clip: text;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-  background-clip: text;
-  border-color: white;
-}
+/* --- REMOVED THIS RULE --- */
+/* .uitags a:hover { ... } */
 
 /* Add this to NoteList.module.css */
 
 .masonryContainer {
-  /* This matches Bootstrap's 'g-3' gutter */
   column-gap: 1rem;
-
-  /* This sets up the responsive columns based on your <Row> props */
   column-count: 1; /* xs */
 }
 
@@ -185,13 +173,50 @@ body {
 }
 
 .masonryItem {
-  /* This is the magic! Prevents a card from splitting across columns. */
   break-inside: avoid;
-
-  /* This provides the vertical spacing (also from 'g-3') */
   margin-bottom: 1rem;
-
-  /* Fixes potential layout issues with inline-block */
   display: inline-block;
   width: 100%;
+}
+
+.module-border-wrap {
+  position: relative;
+  background: linear-gradient(to right, #ff8a00, #e52e71);
+  padding: 3px;
+  border-radius: 20px;
+  transition: 0.2s;
+}
+
+.module-border-wrap:hover {
+  transform: translateY(-0.4rem);
+}
+
+.note-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  width: 100%;
+}
+
+/* --- ADD THESE NEW RULES --- */
+
+/* This applies the gradient to the title when the *card* is hovered */
+.module-border-wrap:hover .uititle {
+  background: linear-gradient(90deg, #ff8a00, #e52e71);
+  text-shadow: none;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* This applies the gradient and border to tags when the *card* is hovered */
+.module-border-wrap:hover .uitags a {
+  background: linear-gradient(90deg, #ff8a00, #e52e71);
+  text-shadow: none;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-clip: text;
+  border-color: white;
 }

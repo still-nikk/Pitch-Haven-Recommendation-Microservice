@@ -14,7 +14,6 @@ import { supabase } from "./lib/supabaseClient";
 import { useNavigate } from "react-router-dom"; // add this at top
 import ProtectedRoute from "./ProtectedRoute";
 import InterestSelection from "./InterestSelection";
-import Loader from "./components/Loader";
 
 export type Note = {
   id: string;
@@ -28,6 +27,7 @@ export type RawNoteData = {
   title: string;
   markdown: string;
   tagIds: string[];
+  username: string;
 };
 
 export type NoteData = {
@@ -100,7 +100,6 @@ function App() {
         });
     }
   }, [currentDbUser]);
-
   // Fetch notes and tags from backend
   // useEffect(() => {
   //   async function fetchNotesAndTags() {
@@ -166,6 +165,7 @@ function App() {
           id: note.id.toString(),
           title: note.title,
           markdown: note.markdown,
+          username: note.username,
           tagIds: (note.tags ?? []).map((tag: any) => tag.id.toString()),
         }));
 
@@ -215,11 +215,8 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          tags: noteTags.map((tag) => ({
-            id: Number(tag.id),
-            label: tag.label,
-          })),
-          user_id: currentDbUser.id,
+          tags: noteTags.map((tag) => ({ id: Number(tag.id) })), // Only id
+          user_id: currentDbUser.id, // Add this line!
         }),
       });
 
@@ -238,6 +235,7 @@ function App() {
           id: note.id.toString(),
           title: note.title,
           markdown: note.markdown,
+          username: currentUser.user_metadata.user_name,
           tagIds: note.tags.map((tag) => tag.id.toString()),
         },
       ]);
@@ -292,6 +290,7 @@ function App() {
                 id: note.id.toString(),
                 title: note.title,
                 markdown: note.markdown,
+                username: n.username,
                 tagIds: note.tags.map((tag) => tag.id.toString()),
               }
             : n
@@ -427,7 +426,7 @@ function App() {
 
   if (loading) {
     // Show loader while checking auth/db user
-    return <Loader />;
+    return <div>Loading user data...</div>;
   }
 
   if (!currentUser) {
