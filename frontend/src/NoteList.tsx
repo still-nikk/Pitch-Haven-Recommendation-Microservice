@@ -112,6 +112,14 @@ export function NoteList({
   const [title, setTitle] = useState("");
   const [editTagsModalIsOpen, setEditTagsModalIsOpen] = useState(false);
 
+  const userName = currentUser?.user_metadata?.user_name || "User";
+
+  const userAvatar =
+    currentUser?.user_metadata?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      userName
+    )}&background=7F35FF&color=fff`;
+
   console.log("Printing UserTagIds: ", userTagIds);
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
@@ -129,7 +137,7 @@ export function NoteList({
 
   return (
     <>
-      <Row className="align-items-center mb-4">
+      {/* <Row className="align-items-center mb-4">
         <Col>
           <h1>Projects</h1>
         </Col>
@@ -158,12 +166,12 @@ export function NoteList({
             )}
           </Stack>
         </Col>
-      </Row>
+      </Row> */}
       <Form>
         <Row className="mb-4">
           <Col>
             <Form.Group controlId="title">
-              <Form.Label>Title</Form.Label>
+              {/* <Form.Label>Title</Form.Label> */}
               <Form.Control
                 className="formInput"
                 placeholder="Enter Title to Search"
@@ -173,7 +181,7 @@ export function NoteList({
               />
             </Form.Group>
           </Col>
-          <Col>
+          {/* <Col>
             <Form.Group controlId="tags">
               <Form.Label>Tags</Form.Label>
               <ReactSelect
@@ -197,7 +205,7 @@ export function NoteList({
                 isMulti
               />
             </Form.Group>
-          </Col>
+          </Col> */}
         </Row>
       </Form>
       <div className="masonryContainer">
