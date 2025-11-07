@@ -3,7 +3,9 @@
 ## Sequential Workflow for Presentation
 
 ### Phase 1: Local Development & Containerization
+
 1. **Project Structure Explanation**
+
    - Show the microservices architecture:
      ```
      pitch-haven/
@@ -16,6 +18,7 @@
    - Highlight technology choices
 
 2. **Containerization Strategy**
+
    - Demonstrate Dockerfile for each service
    - Explain multi-stage builds
    - Show build optimizations
@@ -28,13 +31,16 @@
    - Explain networking between services
 
 ### Phase 2: DevOps Implementation
+
 1. **Version Control**
+
    - Repository structure
    - Branch strategy
    - Code review process
    - Commit conventions
 
 2. **Build Process**
+
    ```mermaid
    flowchart LR
      A[Source Code] --> B[Docker Build]
@@ -50,13 +56,16 @@
    - Security scans
 
 ### Phase 3: Cloud Infrastructure
+
 1. **Azure Resource Creation**
+
    - Resource Group
    - Container Apps Environment
    - Log Analytics Workspace
    - Networking setup
 
 2. **Deployment Flow**
+
    ```mermaid
    flowchart TD
      A[Container Registry] --> B[Azure Container Apps]
@@ -73,13 +82,16 @@
    - API configurations
 
 ### Phase 4: Production Features
+
 1. **Scaling Strategy**
+
    - Zero-scale implementation
    - Resource allocation
    - Auto-scaling rules
    - Load balancing
 
 2. **Monitoring Setup**
+
    - Log Analytics
    - Performance metrics
    - Alert configuration
@@ -94,30 +106,35 @@
 ## Presentation Flow
 
 ### 1. Introduction (5 minutes)
+
 - Project overview
 - Business requirements
 - Technical challenges
 - Architecture decisions
 
 ### 2. Local Development Demo (10 minutes)
+
 - Show codebase organization
 - Demonstrate containerization
 - Run services locally
 - Explain docker-compose
 
 ### 3. Cloud Infrastructure (10 minutes)
+
 - Azure Portal walkthrough
 - Resource organization
 - Configuration setup
 - Deployment process
 
 ### 4. Production Features (10 minutes)
+
 - Scaling demonstration
 - Monitoring overview
 - Security implementation
 - Cost optimization
 
 ### 5. Live Demo (10 minutes)
+
 - Deploy an update
 - Show scaling in action
 - Display monitoring
@@ -177,11 +194,14 @@ Icons to Use:
 ## Key Talking Points
 
 ### 1. Enterprise-Grade Features
+
 - **Scalability**
+
   - "Our zero-scale implementation ensures cost optimization..."
   - "Auto-scaling capabilities handle traffic spikes..."
 
 - **Security**
+
   - "Multi-layer security approach..."
   - "Secure secret management through Azure..."
 
@@ -190,11 +210,14 @@ Icons to Use:
   - "Automated health checks and recovery..."
 
 ### 2. DevOps Excellence
+
 - **Automation**
+
   - "Fully automated build and deployment pipeline..."
   - "Continuous integration and delivery..."
 
 - **Monitoring**
+
   - "Comprehensive logging and monitoring..."
   - "Real-time metrics and alerts..."
 
@@ -203,7 +226,9 @@ Icons to Use:
   - "Version-controlled configurations..."
 
 ### 3. Cost Optimization
+
 - **Resource Management**
+
   - "Efficient resource allocation..."
   - "Pay-per-use model..."
 
@@ -214,22 +239,26 @@ Icons to Use:
 ## Demo Script
 
 1. **Start Local** (5 minutes)
+
    ```bash
    # Show local development
    docker compose up --build -d
    ```
 
 2. **Show Azure** (5 minutes)
+
    - Navigate Resource Group
    - Display Container Apps
    - Show Monitoring
 
 3. **Deploy Update** (5 minutes)
+
    - Make a small change
    - Deploy update
    - Show logs
 
 4. **Demonstrate Scale** (5 minutes)
+
    - Show zero-scale
    - Trigger scaling event
    - Display metrics
@@ -242,6 +271,7 @@ Icons to Use:
 ## Backup Plan
 
 Have these ready in case of demo issues:
+
 1. Screenshots of key features
 2. Pre-recorded video of deployment
 3. Architectural diagrams
@@ -250,6 +280,7 @@ Have these ready in case of demo issues:
 ## Success Metrics
 
 Be ready to discuss:
+
 1. Deployment frequency
 2. Lead time for changes
 3. Mean time to recovery
